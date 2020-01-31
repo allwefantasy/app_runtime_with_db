@@ -7,7 +7,7 @@ import org.apache.http.client.fluent.{Form, Request}
 import tech.mlsql.app_runtime.db.quill_model.{DictStore, DictType}
 import tech.mlsql.app_runtime.db.service.BasicDBService
 import tech.mlsql.common.utils.serder.json.JSONTool
-import tech.mlsql.serviceframework.platform.action.CustomAction
+import tech.mlsql.serviceframework.platform.action.{ActionContext, CustomAction}
 import tech.mlsql.serviceframework.platform.{PluginItem, PluginType}
 
 /**
@@ -15,10 +15,12 @@ import tech.mlsql.serviceframework.platform.{PluginItem, PluginType}
  */
 class AddDBAction extends CustomAction {
   override def run(params: Map[String, String]): String = {
+    val context = ActionContext.context()
+    if (!BasicDBService.canAccess(params("admin_token")))
+      render(context.httpContext.response, 400, "admin_token is required")
     val instanceNameOpt = params.get("instanceName")
     val dbName = params("dbName")
     val dbConfig = params("dbConfig")
-
 
     def updateOrInsertRelatedInstance = {
       instanceNameOpt match {
@@ -64,6 +66,10 @@ class AddDBAction extends CustomAction {
 
 class LoadDBAction extends CustomAction {
   override def run(params: Map[String, String]): String = {
+    val context = ActionContext.context()
+    if (!BasicDBService.canAccess(params("admin_token")))
+      render(context.httpContext.response, 400, "admin_token is required")
+
     BasicDBService.fetchDB(params("name")) match {
       case Some(db) => QuillDB.createNewCtxByNameFromStr(db.name, db.value)
     }
@@ -73,6 +79,10 @@ class LoadDBAction extends CustomAction {
 
 class AddProxyAction extends CustomAction {
   override def run(params: Map[String, String]): String = {
+    val context = ActionContext.context()
+    if (!BasicDBService.canAccess(params("admin_token")))
+      render(context.httpContext.response, 400, "admin_token is required")
+    
     BasicDBService.fetch(params("name"), DictType.INSTANCE_TO_INSTANCE_PROXY) match {
       case Some(db) =>
         ctx.run(BasicDBService.lazyFetch(params("name"), DictType.INSTANCE_TO_INSTANCE_PROXY).
