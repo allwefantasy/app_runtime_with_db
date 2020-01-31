@@ -100,7 +100,7 @@ class BasicActionProxy(pluginName: String) {
   def run(action: String, params: Map[String, String]): String = {
     val form = Form.form()
     form.add("action", action)
-    params.filterNot(_._1 != "action").foreach(f => form.add(f._1, f._2))
+    params.filterNot(_._1 == "action").foreach(f => form.add(f._1, f._2))
     val res = Request.Post(current_url).connectTimeout(10 * 1000)
       .socketTimeout(10 * 1000).bodyForm(form.build())
       .execute().returnContent().asString()
