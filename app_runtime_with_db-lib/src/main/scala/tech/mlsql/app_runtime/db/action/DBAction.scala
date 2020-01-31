@@ -19,6 +19,7 @@ class AddDBAction extends CustomAction {
     val dbName = params("dbName")
     val dbConfig = params("dbConfig")
 
+
     def updateOrInsertRelatedInstance = {
       instanceNameOpt match {
         case Some(instanceName) =>
