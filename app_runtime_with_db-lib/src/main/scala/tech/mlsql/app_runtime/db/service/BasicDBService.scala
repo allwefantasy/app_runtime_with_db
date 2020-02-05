@@ -2,7 +2,6 @@ package tech.mlsql.app_runtime.db.service
 
 import net.csdn.ServiceFramwork
 import net.csdn.common.settings.Settings
-import net.csdn.jpa.JPA
 import net.csdn.jpa.QuillDB.ctx
 import net.csdn.jpa.QuillDB.ctx._
 import tech.mlsql.app_runtime.db.quill_model.DictType.DictType
@@ -12,7 +11,8 @@ object BasicDBService {
 
   def isDBSupport = {
     val settings = ServiceFramwork.injector.getInstance(classOf[Settings])
-    settings.getAsBoolean(JPA.mode + ".datasources.mysql.disable", false)
+
+    !settings.getAsBoolean(settings.get("mode") + ".datasources.mysql.disable", false)
   }
 
   def adminToken = {
