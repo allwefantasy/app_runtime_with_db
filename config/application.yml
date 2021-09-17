@@ -7,8 +7,8 @@ development:
       host: 127.0.0.1
       port: 3306
       database: basic_app_runtime
-      username: xxxxx
-      password: xxxxx
+      username: root
+      password: mlsql
       initialSize: 8
       disable: false
       removeAbandoned: true

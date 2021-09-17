@@ -4,23 +4,29 @@ import net.csdn.jpa.QuillDB
 import net.csdn.jpa.QuillDB.ctx
 import net.csdn.jpa.QuillDB.ctx._
 import org.apache.http.client.fluent.{Form, Request}
+import tech.mlsql.serviceframework.platform.form.{Editor, FormParams, Input, KV}
 import tech.mlsql.app_runtime.db.quill_model.{DictStore, DictType}
 import tech.mlsql.app_runtime.db.service.BasicDBService
 import tech.mlsql.common.utils.serder.json.JSONTool
-import tech.mlsql.serviceframework.platform.action.{ActionContext, CustomAction}
+import tech.mlsql.serviceframework.platform.action.CustomAction
 import tech.mlsql.serviceframework.platform.{PluginItem, PluginType}
 
 /**
  * 21/1/2020 WilliamZhu(allwefantasy@gmail.com)
  */
-class AddDBAction extends CustomAction {
-  override def run(params: Map[String, String]): String = {
-    val context = ActionContext.context()
-    if (!BasicDBService.canAccess(params("admin_token")))
-      render(context.httpContext.response, 400, "admin_token is required")
-    val instanceNameOpt = params.get("instanceName")
-    val dbName = params("dbName")
-    val dbConfig = params("dbConfig")
+class AddDBAction extends DBBaseAction {
+  override def _run(params: Map[String, String]): String = {
+    val instanceNameOpt = params.get(AddDBAction.Params.INSTANCE_NAME.name)
+    val dbName = params(AddDBAction.Params.DB_NAME.name)
+    val dbConfig = params.get(AddDBAction.Params.DB_CONFIG.name) match {
+      case Some(item) => item
+      case None => AddDBAction.dbTemplate(params(AddDBAction.Params.HOST.name),
+        params(AddDBAction.Params.PORT.name),
+        dbName,
+        params(AddDBAction.Params.USER_NAME.name),
+        params(AddDBAction.Params.PASSWORD.name)
+      )
+    }
 
     def updateOrInsertRelatedInstance = {
       instanceNameOpt match {
@@ -59,16 +65,57 @@ class AddDBAction extends CustomAction {
         }
 
     }
-    JSONTool.toJsonStr(Map())
+    JSONTool.toJsonStr(ctx.run(ctx.query[DictStore]))
+  }
+
+  override def _help(): String = {
+    JSONTool.toJsonStr(FormParams.toForm(AddDBAction.Params).toList.reverse)
   }
 
 }
 
+object AddDBAction {
+
+  object Params {
+    val ADMIN_TOKEN = Input("admin_token", "")
+    val INSTANCE_NAME = Input("instanceName", "")
+    val DB_NAME = Input("dbName", "")
+
+    val HOST = Input("host", "")
+    val PORT = Input("port", "")
+    val USER_NAME = Input("username", "")
+    val PASSWORD = Input("password", "")
+
+    val DB_CONFIG = Editor("dbConfig", values = List(), valueProvider = Option(() => {
+      List(KV(Option("yaml"), Option("")))
+    }))
+  }
+
+  def dbTemplate(host: String, port: String, database: String, username: String, password: String) = {
+    s"""
+       |${database}:
+       |  host: ${host}
+       |  port: ${port}
+       |  database: ${database}
+       |  username: ${username}
+       |  password: ${password}
+       |  initialSize: 8
+       |  disable: false
+       |  removeAbandoned: true
+       |  testWhileIdle: true
+       |  removeAbandonedTimeout: 30
+       |  maxWait: 100
+       |  filters: stat,log4j
+       |""".stripMargin
+  }
+
+  def action = "addDB"
+
+  def plugin = PluginItem(action, classOf[AddDBAction].getName, PluginType.action, None)
+}
+
 class LoadDBAction extends CustomAction {
   override def run(params: Map[String, String]): String = {
-    val context = ActionContext.context()
-    if (!BasicDBService.canAccess(params("admin_token")))
-      render(context.httpContext.response, 400, "admin_token is required")
 
     BasicDBService.fetchDB(params("name")) match {
       case Some(db) => QuillDB.createNewCtxByNameFromStr(db.name, db.value)
@@ -77,12 +124,9 @@ class LoadDBAction extends CustomAction {
   }
 }
 
-class AddProxyAction extends CustomAction {
-  override def run(params: Map[String, String]): String = {
-    val context = ActionContext.context()
-    if (!BasicDBService.canAccess(params("admin_token")))
-      render(context.httpContext.response, 400, "admin_token is required")
-    
+class AddProxyAction extends DBBaseAction {
+  override def _run(params: Map[String, String]): String = {
+
     BasicDBService.fetch(params("name"), DictType.INSTANCE_TO_INSTANCE_PROXY) match {
       case Some(db) =>
         ctx.run(BasicDBService.lazyFetch(params("name"), DictType.INSTANCE_TO_INSTANCE_PROXY).
@@ -90,14 +134,25 @@ class AddProxyAction extends CustomAction {
       case None =>
         BasicDBService.addItem(params("name"), params("value"), DictType.INSTANCE_TO_INSTANCE_PROXY)
     }
-    JSONTool.toJsonStr(Map())
+    JSONTool.toJsonStr(ctx.run(ctx.query[DictStore]))
+  }
+
+  override def _help(): String = {
+    JSONTool.toJsonStr(FormParams.toForm(AddProxyAction.Params).toList.reverse)
   }
 }
 
 object AddProxyAction {
-  def plugin = PluginItem(action, classOf[AddProxyAction].getName, PluginType.action, None)
+
+  object Params {
+    val ADMIN_TOKEN = Input("admin_token", "")
+    val INSTANCE_NAME = Input("name", "")
+    val INSTANCE_URL = Input("value", "")
+  }
 
   def action = "addProxy"
+
+  def plugin = PluginItem(action, classOf[AddProxyAction].getName, PluginType.action, None)
 }
 
 class BasicActionProxy(pluginName: String) {
