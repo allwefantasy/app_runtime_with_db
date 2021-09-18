@@ -4,11 +4,11 @@ import net.csdn.jpa.QuillDB
 import net.csdn.jpa.QuillDB.ctx
 import net.csdn.jpa.QuillDB.ctx._
 import org.apache.http.client.fluent.{Form, Request}
-import tech.mlsql.serviceframework.platform.form.{Editor, FormParams, Input, KV}
 import tech.mlsql.app_runtime.db.quill_model.{DictStore, DictType}
 import tech.mlsql.app_runtime.db.service.BasicDBService
 import tech.mlsql.common.utils.serder.json.JSONTool
 import tech.mlsql.serviceframework.platform.action.CustomAction
+import tech.mlsql.serviceframework.platform.form.{Editor, FormParams, Input, KV}
 import tech.mlsql.serviceframework.platform.{PluginItem, PluginType}
 
 /**
@@ -109,7 +109,7 @@ object AddDBAction {
        |""".stripMargin
   }
 
-  def action = "addDB"
+  def action = "add/db"
 
   def plugin = PluginItem(action, classOf[AddDBAction].getName, PluginType.action, None)
 }
@@ -122,6 +122,17 @@ class LoadDBAction extends CustomAction {
     }
     JSONTool.toJsonStr(Map())
   }
+}
+
+object LoadDBAction {
+
+  object Params {
+    val DB_NAME = Input("name", "")
+  }
+
+  def action="db/load"
+  def plugin = PluginItem(action, classOf[LoadDBAction].getName, PluginType.action, None)
+
 }
 
 class AddProxyAction extends DBBaseAction {
