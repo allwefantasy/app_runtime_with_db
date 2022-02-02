@@ -7,7 +7,7 @@
     <groupId>tech.mlsql.serviceframework.baseweb</groupId>
     <artifactId>app_runtime_with_db_2.11</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <modules>
         <module>app_runtime_with_db-lib</module>
         <module>app_runtime_with_db-bin</module>
