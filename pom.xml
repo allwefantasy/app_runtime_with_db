@@ -7,7 +7,7 @@
     <groupId>tech.mlsql.serviceframework.baseweb</groupId>
     <artifactId>app_runtime_with_db_2.11</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.2</version>
+    <version>1.0.4</version>
     <modules>
         <module>app_runtime_with_db-lib</module>
         <module>app_runtime_with_db-bin</module>
@@ -51,7 +51,7 @@
         <scala.version>2.11.8</scala.version>
         <scala.binary.version>2.11</scala.binary.version>
         <scala.jline.version>2.11.0-M3</scala.jline.version>
-        <web-platform-version>0.2.1</web-platform-version>
+        <web-platform-version>0.2.2</web-platform-version>
     </properties>
 
     <profiles>
